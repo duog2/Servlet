@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatsHTMLServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Simple Webapp(s)</a> &gt; <a href="index.source.html" class="el_package">nz.ac.wgtn.swen301.restappender.server</a> &gt; <span class="el_source">StatsHTMLServlet.java</span></div><h1>StatsHTMLServlet.java</h1><pre class="source lang-java linenums">package nz.ac.wgtn.swen301.restappender.server;
+
+import org.json.JSONObject;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Map;
+import java.util.HashMap;
+
+<span class="fc" id="L16">public class StatsHTMLServlet extends HttpServlet {</span>
+
+<span class="fc" id="L18">    protected Persistency persistency = LogsServlet.getPersistency();</span>
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+<span class="fc" id="L22">        String htmlFilePath = &quot;log_levels.html&quot;;</span>
+<span class="fc" id="L23">        boolean fileExists = Files.exists(Paths.get(htmlFilePath));</span>
+
+<span class="fc" id="L25">        response.setContentType(&quot;text/html&quot;);</span>
+
+        // Create a map to store the sums for each logger and level
+<span class="fc" id="L28">        Map&lt;String, Map&lt;String, Integer&gt;&gt; loggerLevelSums = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L30">        try (PrintWriter writer = response.getWriter()) {</span>
+<span class="fc" id="L31">            writer.append(&quot;&lt;html&gt;&quot;);</span>
+<span class="fc" id="L32">            writer.append(&quot;&lt;head&gt;&lt;title&gt;Log Levels&lt;/title&gt;&lt;/head&gt;&quot;);</span>
+<span class="fc" id="L33">            writer.append(&quot;&lt;body&gt;&quot;);</span>
+<span class="fc" id="L34">            writer.append(&quot;&lt;table border=\&quot;1\&quot;&gt;&quot;);</span>
+<span class="fc" id="L35">            writer.append(&quot;&lt;tr&gt;&quot;);</span>
+<span class="fc" id="L36">            writer.append(&quot;&lt;th&gt;Logger&lt;/th&gt;&quot;);</span>
+<span class="fc" id="L37">            writer.append(&quot;&lt;th&gt;ALL&lt;/th&gt;&quot;);</span>
+<span class="fc" id="L38">            writer.append(&quot;&lt;th&gt;TRACE&lt;/th&gt;&quot;);</span>
+<span class="fc" id="L39">            writer.append(&quot;&lt;th&gt;DEBUG&lt;/th&gt;&quot;);</span>
+<span class="fc" id="L40">            writer.append(&quot;&lt;th&gt;INFO&lt;/th&gt;&quot;);</span>
+<span class="fc" id="L41">            writer.append(&quot;&lt;th&gt;WARN&lt;/th&gt;&quot;);</span>
+<span class="fc" id="L42">            writer.append(&quot;&lt;th&gt;ERROR&lt;/th&gt;&quot;);</span>
+<span class="fc" id="L43">            writer.append(&quot;&lt;th&gt;FATAL&lt;/th&gt;&quot;);</span>
+<span class="fc" id="L44">            writer.append(&quot;&lt;th&gt;OFF&lt;/th&gt;&quot;);</span>
+<span class="fc" id="L45">            writer.append(&quot;&lt;/tr&gt;&quot;);</span>
+
+<span class="fc bfc" id="L47" title="All 2 branches covered.">            for (int i = 0; i &lt; persistency.getLogs().length(); i++) {</span>
+<span class="fc" id="L48">                JSONObject jsonObject = (JSONObject) persistency.getLogs().get(i);</span>
+<span class="fc" id="L49">                String logger = (String) jsonObject.get(&quot;logger&quot;);</span>
+
+<span class="fc" id="L51">                loggerLevelSums.putIfAbsent(logger, new HashMap&lt;&gt;());</span>
+
+<span class="fc bfc" id="L53" title="All 2 branches covered.">                for (String level : new String[]{&quot;ALL&quot;, &quot;TRACE&quot;, &quot;DEBUG&quot;, &quot;INFO&quot;, &quot;WARN&quot;, &quot;ERROR&quot;, &quot;FATAL&quot;, &quot;OFF&quot;}) {</span>
+<span class="fc" id="L54">                    int levelSum = loggerLevelSums.get(logger).getOrDefault(level, 0);</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">                    loggerLevelSums.get(logger).put(level, levelSum + (getLevel((String) jsonObject.get(&quot;level&quot;), level) ? 1 : 0));</span>
+                }
+            }
+
+            // Send the content to the response
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            for (String logger : loggerLevelSums.keySet()) {</span>
+<span class="fc" id="L61">                writer.append(&quot;&lt;tr&gt;&quot;);</span>
+<span class="fc" id="L62">                writer.append(&quot;&lt;td&gt;&quot;).append(String.valueOf(logger)).append(&quot;&lt;/td&gt;&quot;);</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">                for (String level : new String[]{&quot;ALL&quot;, &quot;TRACE&quot;, &quot;DEBUG&quot;, &quot;INFO&quot;, &quot;WARN&quot;, &quot;ERROR&quot;, &quot;FATAL&quot;, &quot;OFF&quot;}) {</span>
+<span class="fc" id="L64">                    writer.append(&quot;&lt;td&gt;&quot;).append(String.valueOf(loggerLevelSums.get(logger).getOrDefault(level, 0))).append(&quot;&lt;/td&gt;&quot;);</span>
+                }
+<span class="fc" id="L66">                writer.append(&quot;&lt;/tr&gt;&quot;);</span>
+<span class="fc" id="L67">            }</span>
+
+<span class="fc" id="L69">            writer.append(&quot;&lt;/table&gt;&quot;);</span>
+<span class="fc" id="L70">            writer.append(&quot;&lt;/body&gt;&quot;);</span>
+<span class="fc" id="L71">            writer.append(&quot;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L72">        } catch (IOException e) {</span>
+<span class="nc" id="L73">            e.printStackTrace();</span>
+<span class="fc" id="L74">        }</span>
+
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        if (!fileExists) {</span>
+<span class="nc" id="L77">            try (FileWriter htmlWriter = new FileWriter(htmlFilePath)) {</span>
+<span class="nc" id="L78">                htmlWriter.append(&quot;&lt;html&gt;&quot;);</span>
+<span class="nc" id="L79">                htmlWriter.append(&quot;&lt;head&gt;&lt;title&gt;Log Levels&lt;/title&gt;&lt;/head&gt;&quot;);</span>
+<span class="nc" id="L80">                htmlWriter.append(&quot;&lt;body&gt;&quot;);</span>
+<span class="nc" id="L81">                htmlWriter.append(&quot;&lt;table border=\&quot;1\&quot;&gt;&quot;);</span>
+<span class="nc" id="L82">                htmlWriter.append(&quot;&lt;tr&gt;&quot;);</span>
+<span class="nc" id="L83">                htmlWriter.append(&quot;&lt;th&gt;Logger&lt;/th&gt;&quot;);</span>
+<span class="nc" id="L84">                htmlWriter.append(&quot;&lt;th&gt;ALL&lt;/th&gt;&quot;);</span>
+<span class="nc" id="L85">                htmlWriter.append(&quot;&lt;th&gt;TRACE&lt;/th&gt;&quot;);</span>
+<span class="nc" id="L86">                htmlWriter.append(&quot;&lt;th&gt;DEBUG&lt;/th&gt;&quot;);</span>
+<span class="nc" id="L87">                htmlWriter.append(&quot;&lt;th&gt;INFO&lt;/th&gt;&quot;);</span>
+<span class="nc" id="L88">                htmlWriter.append(&quot;&lt;th&gt;WARN&lt;/th&gt;&quot;);</span>
+<span class="nc" id="L89">                htmlWriter.append(&quot;&lt;th&gt;ERROR&lt;/th&gt;&quot;);</span>
+<span class="nc" id="L90">                htmlWriter.append(&quot;&lt;th&gt;FATAL&lt;/th&gt;&quot;);</span>
+<span class="nc" id="L91">                htmlWriter.append(&quot;&lt;th&gt;OFF&lt;/th&gt;&quot;);</span>
+<span class="nc" id="L92">                htmlWriter.append(&quot;&lt;/tr&gt;&quot;);</span>
+
+                // Iterate through the loggerLevelSums map to write the sums to the HTML file
+<span class="nc bnc" id="L95" title="All 2 branches missed.">                for (String logger : loggerLevelSums.keySet()) {</span>
+<span class="nc" id="L96">                    htmlWriter.append(&quot;&lt;tr&gt;&quot;);</span>
+<span class="nc" id="L97">                    htmlWriter.append(&quot;&lt;td&gt;&quot;).append(String.valueOf(logger)).append(&quot;&lt;/td&gt;&quot;);</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                    for (String level : new String[]{&quot;ALL&quot;, &quot;TRACE&quot;, &quot;DEBUG&quot;, &quot;INFO&quot;, &quot;WARN&quot;, &quot;ERROR&quot;, &quot;FATAL&quot;, &quot;OFF&quot;}) {</span>
+<span class="nc" id="L99">                        htmlWriter.append(&quot;&lt;td&gt;&quot;).append(String.valueOf(loggerLevelSums.get(logger).getOrDefault(level, 0))).append(&quot;&lt;/td&gt;&quot;);</span>
+                    }
+<span class="nc" id="L101">                    htmlWriter.append(&quot;&lt;/tr&gt;&quot;);</span>
+<span class="nc" id="L102">                }</span>
+
+<span class="nc" id="L104">                htmlWriter.append(&quot;&lt;/table&gt;&quot;);</span>
+<span class="nc" id="L105">                htmlWriter.append(&quot;&lt;/body&gt;&quot;);</span>
+<span class="nc" id="L106">                htmlWriter.append(&quot;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L107">            } catch (IOException e) {</span>
+<span class="nc" id="L108">                e.printStackTrace();</span>
+<span class="nc" id="L109">            }</span>
+        }
+<span class="fc" id="L111">    }</span>
+
+    protected boolean getLevel(String level, String JSONLevel) {
+<span class="fc" id="L114">        return level.equalsIgnoreCase(JSONLevel);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

@@ -1,0 +1,6 @@
+nz\ac\wgtn\swen301\restappender\server\TestStatsCSV.class
+nz\ac\wgtn\swen301\restappender\server\TestStatsHTML.class
+nz\ac\wgtn\swen301\restappender\server\TestStatsXLS.class
+nz\ac\wgtn\swen301\restappender\server\TestDeleteLogs.class
+nz\ac\wgtn\swen301\restappender\server\TestPostLogs.class
+nz\ac\wgtn\swen301\restappender\server\TestGetLogs.class

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatsExcelServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Simple Webapp(s)</a> &gt; <a href="index.source.html" class="el_package">nz.ac.wgtn.swen301.restappender.server</a> &gt; <span class="el_source">StatsExcelServlet.java</span></div><h1>StatsExcelServlet.java</h1><pre class="source lang-java linenums">package nz.ac.wgtn.swen301.restappender.server;
+
+import org.json.JSONObject;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+
+public class StatsExcelServlet extends HttpServlet {
+<span class="nc" id="L17">    public StatsExcelServlet(){}</span>
+<span class="nc" id="L18">    protected Persistency persistency = LogsServlet.getPersistency();</span>
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+<span class="nc" id="L21">        String csvFilePath = &quot;log_levels.xls&quot;;</span>
+
+<span class="nc" id="L23">        Map&lt;String, Map&lt;String, Integer&gt;&gt; loggerLevelSums = new HashMap&lt;&gt;();</span>
+
+<span class="nc" id="L25">        response.setContentType(&quot;text/plain&quot;);</span>
+
+<span class="nc" id="L27">        try (PrintWriter writer = response.getWriter()) {</span>
+<span class="nc" id="L28">            writer.println(&quot;Logger\tALL\tTRACE\tDEBUG\tINFO\tWARN\tERROR\tFATAL\tOFF&quot;);</span>
+
+<span class="nc bnc" id="L30" title="All 2 branches missed.">            for (int i = 0; i &lt; persistency.getLogs().length(); i++) {</span>
+<span class="nc" id="L31">                JSONObject jsonObject = (JSONObject) persistency.getLogs().get(i);</span>
+<span class="nc" id="L32">                String logger = (String) jsonObject.get(&quot;logger&quot;);</span>
+
+<span class="nc" id="L34">                loggerLevelSums.putIfAbsent(logger, new HashMap&lt;&gt;());</span>
+
+<span class="nc bnc" id="L36" title="All 2 branches missed.">                for (String level : new String[]{&quot;ALL&quot;, &quot;TRACE&quot;, &quot;DEBUG&quot;, &quot;INFO&quot;, &quot;WARN&quot;, &quot;ERROR&quot;, &quot;FATAL&quot;, &quot;OFF&quot;}) {</span>
+<span class="nc" id="L37">                    int levelSum = loggerLevelSums.get(logger).getOrDefault(level, 0);</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">                    loggerLevelSums.get(logger).put(level, levelSum + (getLevel((String) jsonObject.get(&quot;level&quot;), level) ? 1 : 0));</span>
+                }
+            }
+
+<span class="nc bnc" id="L42" title="All 2 branches missed.">            for (String logger : loggerLevelSums.keySet()) {</span>
+<span class="nc" id="L43">                writer.append(logger).append(&quot;\t&quot;);</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">                for (String level : new String[]{&quot;ALL&quot;, &quot;TRACE&quot;, &quot;DEBUG&quot;, &quot;INFO&quot;, &quot;WARN&quot;, &quot;ERROR&quot;, &quot;FATAL&quot;, &quot;OFF&quot;}) {</span>
+<span class="nc" id="L45">                    writer.append(String.valueOf(loggerLevelSums.get(logger).getOrDefault(level, 0))).append(&quot;\t&quot;);</span>
+                }
+<span class="nc" id="L47">                writer.append(&quot;\n&quot;);</span>
+<span class="nc" id="L48">            }</span>
+<span class="nc" id="L49">        } catch (IOException e) {</span>
+<span class="nc" id="L50">            e.printStackTrace();</span>
+<span class="nc" id="L51">        }</span>
+
+<span class="nc bnc" id="L53" title="All 4 branches missed.">        if (!Files.exists(Paths.get(csvFilePath)) &amp;&amp; !loggerLevelSums.isEmpty()) {</span>
+<span class="nc" id="L54">            try (FileWriter csvWriter = new FileWriter(csvFilePath)) {</span>
+<span class="nc" id="L55">                csvWriter.append(&quot;Logger\tALL\tTRACE\tDEBUG\tINFO\tWARN\tERROR\tFATAL\tOFF\n&quot;);</span>
+
+<span class="nc bnc" id="L57" title="All 2 branches missed.">                for (String logger : loggerLevelSums.keySet()) {</span>
+<span class="nc" id="L58">                    csvWriter.append(logger).append(&quot;\t&quot;);</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">                    for (String level : new String[]{&quot;ALL&quot;, &quot;TRACE&quot;, &quot;DEBUG&quot;, &quot;INFO&quot;, &quot;WARN&quot;, &quot;ERROR&quot;, &quot;FATAL&quot;, &quot;OFF&quot;}) {</span>
+<span class="nc" id="L60">                        csvWriter.append(String.valueOf(loggerLevelSums.get(logger).getOrDefault(level, 0))).append(&quot;\t&quot;);</span>
+                    }
+<span class="nc" id="L62">                    csvWriter.append(&quot;\n&quot;);</span>
+<span class="nc" id="L63">                }</span>
+<span class="nc" id="L64">            } catch (IOException e) {</span>
+<span class="nc" id="L65">                e.printStackTrace();</span>
+<span class="nc" id="L66">            }</span>
+        }
+<span class="nc" id="L68">    }</span>
+    protected boolean getLevel(String level, String JSONLevel){
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if(level.equalsIgnoreCase(JSONLevel)){</span>
+<span class="nc" id="L71">            return true;</span>
+        }
+<span class="nc" id="L73">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
